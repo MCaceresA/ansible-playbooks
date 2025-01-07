@@ -1,0 +1,44 @@
+---
+- name: Instalar Nginx desde el repositorio oficial en Debian
+  hosts: all
+  become: yes  # Usar privilegios de sudo
+  tasks:
+    - name: Instalar dependencias necesarias
+      apt:
+        name:
+          - curl
+          - gnupg2
+          - ca-certificates
+          - lsb-release
+          - debian-archive-keyring
+        state: present
+
+    - name: Asegurarse de que el directorio de fuentes exista
+      file:
+        path: /etc/apt/sources.list.d/
+        state: directory
+
+    - name: Descargar la clave de firma de Nginx
+      get_url:
+        url: https://nginx.org/keys/nginx_signing.key
+        dest: /tmp/nginx_signing.key
+
+    - name: Convertir la clave a formato de keyring
+      command: gpg --dearmor /tmp/nginx_signing.key
+      args:
+        chdir: /usr/share/keyrings
+
+    - name: Configurar el repositorio de Nginx
+      lineinfile:
+        path: /etc/apt/sources.list.d/nginx.list
+        line: "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/debian $(lsb_release -cs) nginx"
+        state: present
+
+    - name: Actualizar la lista de paquetes
+      apt:
+        update_cache: yes
+
+    - name: Instalar Nginx
+      apt:
+        name: nginx
+        state: present

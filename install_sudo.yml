@@ -1,0 +1,10 @@
+---
+- name: Instalar sudo en el servidor
+  hosts: all
+  become: yes  # Usar privilegios de sudo
+  tasks:
+    - name: Asegurarse de que sudo esté instalado
+      apt:
+        name: sudo
+        state: present
+      when: ansible_os_family == "Debian"

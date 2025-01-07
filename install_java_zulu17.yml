@@ -1,0 +1,74 @@
+---
+- name: Instalar Java Zulu 17 y transferir el archivo Zulu
+  hosts: all
+  become: true
+
+  vars:
+    local_zulu_tar: "/opt/ansible/files/zulu17.52.17-ca-jdk17.0.12-linux_x64.tar.gz"
+    zulu_file_name: "zulu17.52.17-ca-jdk17.0.12-linux_x64"
+    zulu_dir: "/opt/soft/java/{{ zulu_file_name }}"
+    remote_zulu_path: "/opt/repository/zulu17.52.17-ca-jdk17.0.12-linux_x64.tar.gz"
+
+  tasks:
+    - name: Obtener información del usuario actual
+      ansible.builtin.setup:
+        filter: ansible_env
+      register: env_facts
+
+    - name: Definir la ruta del directorio de inicio
+      set_fact:
+        user_home: "{{ env_facts.ansible_facts.ansible_env.HOME }}"
+
+    - name: Crear directorio /opt/repository si no existe
+      ansible.builtin.file:
+        path: "/opt/repository"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Transferir archivo Zulu JDK al servidor (sin extraer)
+      ansible.builtin.copy:
+        src: "{{ local_zulu_tar }}"
+        dest: "{{ remote_zulu_path }}"
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Crear directorio para Zulu JDK
+      ansible.builtin.file:
+        path: "{{ zulu_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Extraer Zulu JDK 17 en el directorio adecuado
+      ansible.builtin.unarchive:
+        src: "{{ remote_zulu_path }}"
+        dest: "/opt/soft/java/"
+        remote_src: yes
+
+    - name: Crear enlace simbólico /opt/java que apunte a Zulu JDK
+      ansible.builtin.file:
+        path: "/opt/java"
+        state: link
+        src: "{{ zulu_dir }}"
+
+    - name: Añadir JAVA_HOME y actualizar PATH en .bashrc del usuario
+      ansible.builtin.lineinfile:
+        path: "{{ user_home }}/.bashrc"
+        line: |
+          export JAVA_HOME=/opt/java
+          export PATH=$JAVA_HOME/bin:$PATH
+        create: yes
+        state: present
+
+    - name: Verificar instalación de Java
+      ansible.builtin.command:
+        cmd: java -version
+      register: java_version_output
+
+    - name: Mostrar salida de java -version
+      ansible.builtin.debug:
+        msg: "{{ java_version_output.stdout }}"

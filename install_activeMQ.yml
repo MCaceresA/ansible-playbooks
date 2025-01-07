@@ -1,0 +1,117 @@
+---
+- name: Instalar ActiveMQ
+  hosts: all
+  become: yes
+  vars:
+    local_activemq_tar: "/opt/ansible/files/apache-activemq-5.18.6-bin.tar.gz"
+    remote_activemq_tar: "/opt/repository/apache-activemq-5.18.6-bin.tar.gz"
+    activemq_extract_dir: "/opt/soft/activemq/apache-activemq-5.18.6"
+    activemq_symlink: "/opt/activemq"
+    activemq_user: "activemq"
+    activemq_group: "activemq"
+    java_home: "/opt/java"
+    jetty_xml_path: "/opt/soft/activemq/apache-activemq-5.18.6/conf/jetty.xml"
+    activemq_xml_path: "/opt/soft/activemq/apache-activemq-5.18.6/conf/activemq.xml"
+    server_ip: "{{ ansible_host }}"  # IP del servidor donde se está instalando
+  tasks:
+
+    - name: Crear directorios necesarios
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "/opt/repository"
+        - "/opt/soft/activemq"
+        - "{{ activemq_extract_dir }}"
+
+    - name: Transferir archivo de ActiveMQ al servidor (sin extraer)
+      copy:
+        src: "{{ local_activemq_tar }}"
+        dest: "{{ remote_activemq_tar }}"
+        mode: '0644'
+
+    - name: Extraer archivo de ActiveMQ
+      unarchive:
+        src: "{{ remote_activemq_tar }}"
+        dest: "/opt/soft/activemq/"
+        remote_src: yes
+        creates: "{{ activemq_extract_dir }}/bin/activemq"
+
+    - name: Crear enlace simbólico de activemq
+      file:
+        src: "{{ activemq_extract_dir }}"
+        dest: "{{ activemq_symlink }}"
+        state: link
+
+    - name: Crear grupo activemq si no existe
+      ansible.builtin.group:
+        name: "{{ activemq_group }}"
+        state: present
+
+    - name: Crear usuario activemq si no existe
+      ansible.builtin.user:
+        name: "{{ activemq_user }}"
+        group: "{{ activemq_group }}"
+        shell: /bin/bash
+        state: present
+    - name: Crear archivo de servicio systemd para ActiveMQ
+      copy:
+        dest: "/etc/systemd/system/activemq.service"
+        content: |
+          [Unit]
+          Description=Apache ActiveMQ
+          After=network.target
+
+          [Service]
+          Type=forking
+          ExecStart=/opt/activemq/bin/activemq start
+          ExecStop=/opt/activemq/bin/activemq stop
+          User={{ activemq_user }}
+          Group={{ activemq_group }}
+          Restart=on-failure
+
+          [Install]
+          WantedBy=multi-user.target
+        mode: '0644'
+
+    - name: Recargar systemd para reconocer el nuevo servicio
+      command: systemctl daemon-reload
+
+    - name: Modificar jetty.xml para actualizar la IP
+      lineinfile:
+        path: "{{ jetty_xml_path }}"
+        regexp: '(\<Set name="host"\>)(.*)(</Set>)'
+        line: '\1{{ server_ip }}\3'
+
+    - name: Establecer JAVA_HOME para activemq al final del archivo
+      lineinfile:
+        path: "/opt/activemq/bin/env"
+        line: "export JAVA_HOME=/opt/java"
+        insertafter: EOF
+
+    - name: Cambiar propietario de /opt/activemq
+      ansible.builtin.file:
+        path: /opt/activemq
+        owner: "{{ activemq_user }}"
+        group: "{{ activemq_group }}"
+        recurse: yes
+        state: directory
+
+
+    - name: Habilitar el servicio ActiveMQ para que inicie en el arranque
+      systemd:
+        name: activemq
+        enabled: yes
+        state: started
+
+    - name: Reiniciar el servicio ActiveMQ
+      systemd:
+        name: activemq
+        state: restarted
+
+    - name: Asegurarse de que ActiveMQ se está ejecutando
+      systemd:
+        name: activemq
+        state: started
+        enabled: yes
