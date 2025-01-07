@@ -1,0 +1,58 @@
+---
+- name: Install Zabbix Agent 2 on Debian
+  hosts: all
+  become: yes  # Use sudo privileges
+  tasks:
+    - name: Ensure wget is installed
+      apt:
+        name: wget
+        state: present
+
+    - name: Download the Zabbix package
+      command: wget -q https://repo.zabbix.com/zabbix/6.0/debian/pool/main/z/zabbix-release/zabbix-release_latest+debian11_all.deb -O /tmp/zabbix-release.deb
+
+    - name: Install the Zabbix package
+      command: dpkg -i /tmp/zabbix-release.deb
+
+    - name: Update the package list
+      apt:
+        update_cache: yes
+
+    - name: Install Zabbix Agent 2 and plugins
+      apt:
+        name:
+          - zabbix-agent2
+          - zabbix-agent2-plugin-*
+        state: present
+
+    - name: Configure the Zabbix Agent 2 configuration file
+      lineinfile:
+        path: /etc/zabbix/zabbix_agent2.conf
+        regexp: '^Server='
+        line: 'Server=your server'
+        state: present
+
+    - name: Configure the ServerActive parameter
+      lineinfile:
+        path: /etc/zabbix/zabbix_agent2.conf
+        regexp: '^ServerActive='
+        line: 'ServerActive=your server'
+        state: present
+
+    - name: Configure the Hostname parameter
+      lineinfile:
+        path: /etc/zabbix/zabbix_agent2.conf
+        regexp: '^Hostname='
+        line: "Hostname={{ inventory_hostname }}"
+        state: present
+
+    - name: Enable and start the Zabbix Agent 2 service
+      systemd:
+        name: zabbix-agent2
+        enabled: yes
+        state: started
+
+    - name: Restart the Zabbix Agent 2 service
+      systemd:
+        name: zabbix-agent2
+        state: restarted
