@@ -1,4 +1,4 @@
-# ![Ansible Logo](https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Ansible_logo.svg/1200px-Ansible_logo.svg.png](https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Ansible_logo.svg/256px-Ansible_logo.svg.png)
+# ![Ansible Logo]([https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Ansible_logo.svg/1200px-Ansible_logo.svg.png](https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Ansible_logo.svg/256px-Ansible_logo.svg.png]
 
 # Ansible Playbooks for Server Automation
 
