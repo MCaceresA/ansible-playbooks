@@ -1,0 +1,37 @@
+---
+- name: Instalar CrowdStrike Falcon Sensor
+  hosts: all
+  become: yes  # Usar privilegios de sudo
+  tasks:
+    - name: Asegurarse de que wget esté instalado
+      apt:
+        name: wget
+        state: present
+
+    - name: Instalar la biblioteca necesaria
+      apt:
+        name: libnl-genl-3-200
+        state: present
+
+    - name: Copiar el paquete Falcon Sensor al servidor
+      copy:
+        src: /opt/ansible/files/falcon-sensor_7.20.0-17306_amd64.deb  # Ruta en tu máquina local
+        dest: /tmp/falcon-sensor_7.20.0-17306_amd64.deb  # Ruta en el servidor
+
+    - name: Instalar el paquete Falcon Sensor
+      apt:
+        deb: /tmp/falcon-sensor_7.20.0-17306_amd64.deb
+
+    - name: Configurar el Falcon Sensor
+      command: >
+        /opt/CrowdStrike/falconctl -s --cid=your_CID --provisioning-token=your_token
+
+    - name: Iniciar el servicio Falcon Sensor
+      systemd:
+        name: falcon-sensor
+        state: started
+
+    - name: Habilitar el servicio Falcon Sensor al inicio
+      systemd:
+        name: falcon-sensor
+        enabled: yes
