@@ -1,0 +1,25 @@
+---
+- name: Modificar configuración de Talend Runtime
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Asegurarse de que el archivo de configuración existe
+      ansible.builtin.stat:
+        path: /opt/talend/runtime/etc/talend-runtime-8.0.1-R2024-05-RT-wrapper.conf
+      register: config_file
+
+    - name: Modificar parámetros existentes en el archivo de configuración
+      ansible.builtin.lineinfile:
+        path: /opt/talend/runtime/etc/talend-runtime-8.0.1-R2024-05-RT-wrapper.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+        insertafter: EOF
+      loop:
+        - { regexp: '^wrapper\\.java\\.initmemory=.*$', line: 'wrapper.java.initmemory=2048' }
+        - { regexp: '^wrapper\\.java\\.maxmemory=.*$', line: 'wrapper.java.maxmemory=4096' }
+      when:
+        - config_file.stat.exists
+        - "'wrapper.java.initmemory=' in lookup('file', config_file.stat.path)"
+        - "'wrapper.java.maxmemory=' in lookup('file', config_file.stat.path)"
