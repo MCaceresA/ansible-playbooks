@@ -1,47 +1,57 @@
-# ![Ansible Logo](https://upload.wikimedia.org/wikipedia/commons/2/24/Ansible_logo.svg)
-
 # Ansible Playbooks for Server Automation
 
-This repository contains a collection of Ansible playbooks designed to automate the configuration and management of Debian-based servers. The playbooks cover a variety of tasks ranging from installing software packages to configuring system services, all aimed at improving efficiency and consistency in server management.
+![Ansible Logo](https://upload.wikimedia.org/wikipedia/commons/2/24/Ansible_logo.svg)
+
+This repository contains a collection of Ansible playbooks designed to automate the configuration and management of Debian-based servers. Tasks include package installation, service configuration, and security hardening.
 
 ## Included Playbooks
 
-The repository includes multiple playbooks for various server setup and maintenance tasks. Each playbook is intended to be reusable and customizable based on the specific needs of your environment. Key tasks automated by these playbooks include package installations, service configurations, and security hardening.
+The repository includes several playbooks for different purposes, ensuring quick and consistent configuration across Debian servers.
 
-## Zabbix Agent 2 Installation Playbook
+### 1. **ActiveMQ Installation**  
+Playbook: `install_activeMQ.yml`  
+- Installs and configures **ActiveMQ**, a popular messaging system.  
+- Sets up services to start automatically on boot.  
 
-One of the key playbooks in this repository is designed to automate the installation and configuration of **Zabbix Agent 2** on Debian-based servers. Zabbix is an enterprise-level monitoring solution, and this playbook ensures that the agent is installed correctly, configured with your server’s details, and the service is properly started and enabled for automatic startup.
+### 2. **CrowdStrike Falcon Sensor Installation**  
+Playbook: `install_crowdstrike.yml`  
+- Installs **CrowdStrike Falcon Sensor** for advanced server protection.  
+- Configures the agent with CID and provisioning token.  
+- Enables the service to start automatically.  
 
-The playbook includes the following steps:
-- Installation of required tools like `wget`.
-- Download and installation of the Zabbix release package.
-- Installation of Zabbix Agent 2 and any necessary plugins.
-- Configuration of critical settings such as the `Server`, `ServerActive`, and `Hostname` parameters.
-- Enabling and starting the Zabbix Agent 2 service to ensure it runs automatically on boot.
+### 3. **Java Zulu 17 Installation**  
+Playbook: `install_java_zulu17.yml`  
+- Downloads and installs **Zulu JDK 17** from Azul Systems.  
+- Configures appropriate environment variables.  
 
-The Zabbix Agent 2 configuration file is customized with the correct server address, ensuring the agent communicates with the Zabbix server effectively.
+### 4. **Nginx Installation**  
+Playbook: `install_nginx.yml`  
+- Installs and configures **Nginx**, a web server and reverse proxy.  
+- Enables the service for automatic startup.  
 
-This playbook helps simplify the process of setting up Zabbix Agent 2 on multiple Debian-based servers, ensuring consistency across your environment.
+### 5. **Sudo Installation and Configuration**  
+Playbook: `install_sudo.yml`  
+- Ensures the `sudo` package is installed.  
+- Configures basic access rules for users.  
 
-## Falcon Sensor Installation Playbook
+### 6. **Zabbix Agent 2 Installation**  
+Playbook: `install_zabbix_agent2.yml`  
+- Installs and configures **Zabbix Agent 2** for monitoring.  
+- Configures parameters such as `Server`, `ServerActive`, and `Hostname`.  
+- Starts and enables the service for automatic startup.  
 
-One of the key playbooks in this repository is designed to automate the installation and configuration of the **CrowdStrike Falcon Sensor** on Debian-based servers. CrowdStrike Falcon is a leading endpoint protection platform, and this playbook ensures that the Falcon Sensor is installed correctly, configured with your server’s unique CID and provisioning token, and the service is properly started and enabled for automatic startup.
+## How to Use These Playbooks  
 
-The playbook includes the following steps:
-
-- **Installation of required tools like `wget`**: Ensures that `wget` is installed on the server for downloading files from the internet.
-- **Installation of necessary libraries**: Installs the required library (`libnl-genl-3-200`) to support certain Falcon Sensor functionalities.
-- **Copying the Falcon Sensor package to the server**: Transfers the `.deb` package for Falcon Sensor from the local machine to the server.
-- **Installation of the Falcon Sensor package**: Installs the Falcon Sensor using the `.deb` package.
-- **Configuration of the Falcon Sensor**: Uses the `falconctl` command to configure the sensor with the correct CID and provisioning token.
-- **Starting the Falcon Sensor service**: Ensures that the Falcon Sensor service is started and running.
-- **Enabling the Falcon Sensor service on boot**: Configures the service to start automatically upon server restart.
-
-The Falcon Sensor is configured with the necessary credentials (CID and token) to connect to your CrowdStrike environment, ensuring that the server is protected by the CrowdStrike platform.
-
-This playbook simplifies the process of setting up the Falcon Sensor on multiple Debian-based servers, ensuring consistent and automated protection across your environment.
-
-
-## Other Playbooks
-
-In addition to the Zabbix Agent 2 installation, the repository includes anothers other playbooks designed to automate various server configuration tasks. These playbooks aim to streamline the setup and management of servers in a consistent and repeatable manner.
+1. Install Ansible on the control machine:  
+   ```bash
+   sudo apt update && sudo apt install ansible -y
+   ```  
+2. Clone the repository:  
+   ```bash
+   git clone https://github.com/your-repo/ansible-playbooks.git
+   cd ansible-playbooks
+   ```  
+3. Run a playbook:  
+   ```bash
+   ansible-playbook -i inventory install_nginx.yml
+   ```  
