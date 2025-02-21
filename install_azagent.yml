@@ -1,0 +1,42 @@
+---
+- name: Configurar agente Azure DevOps
+  hosts: all
+  become: yes
+  tasks:
+
+    - name: Instalar paquetes necesarios (Maven y Git)
+      package:
+        name:
+          - git
+          - maven
+        state: present
+
+    - name: Crear usuario azagent
+      user:
+        name: azagent
+        shell: /bin/bash
+        create_home: yes
+
+    - name: Crear directorio /opt/azagent
+      file:
+        path: /opt/azagent
+        state: directory
+        owner: azagent
+        group: azagent
+        mode: '0755'
+
+    - name: Descargar agente de Azure DevOps
+      get_url:
+        url: "https://vstsagentpackage.azureedge.net/agent/4.251.0/vsts-agent-linux-x64-4.251.0.tar.gz"
+        dest: "/opt/azagent/vsts-agent-linux-x64-4.251.0.tar.gz"
+        owner: azagent
+        group: azagent
+        mode: '0644'
+
+    - name: Extraer agente de Azure DevOps
+      ansible.builtin.unarchive:
+        src: "/opt/azagent/vsts-agent-linux-x64-4.251.0.tar.gz"
+        dest: "/opt/azagent/"
+        remote_src: yes
+        owner: azagent
+        group: azagent
